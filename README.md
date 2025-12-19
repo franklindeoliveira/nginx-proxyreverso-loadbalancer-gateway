@@ -1,4 +1,4 @@
-# NGINX – Reverse Proxy, Load Balancer e Gateway (Docker Compose)
+# NGINX – Reverse Proxy, Load Balancer e Gateway
 
 Este repositório demonstra, de forma **didática e prática**, como utilizar o **NGINX em containers Docker**, usando **docker-compose**, para implementar:
 
