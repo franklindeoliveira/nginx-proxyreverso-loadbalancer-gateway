@@ -1,12 +1,12 @@
-# NGINX – Reverse Proxy, Load Balancer e Gateway
+# NGINX – Reverse Proxy, Load Balancer e Gateway (Docker Compose)
 
-Este repositório demonstra, de forma **didática e prática**, como utilizar o **NGINX** para implementar:
+Este repositório demonstra, de forma **didática e prática**, como utilizar o **NGINX em containers Docker**, usando **docker-compose**, para implementar:
 
 - 🔁 **Proxy Reverso**
 - ⚖️ **Load Balancer**
 - 🚪 **API Gateway simples**
 
-O objetivo é servir como material de estudo e referência para arquiteturas comuns em ambientes **Java, microserviços e aplicações web**.
+O foco é servir como material de estudo para arquiteturas comuns em **Java, microserviços e aplicações web**.
 
 ---
 
@@ -15,11 +15,23 @@ O objetivo é servir como material de estudo e referência para arquiteturas com
 ```
 Cliente
    ↓
-NGINX (80 / 83)
+Docker Host
    ↓
-Serviço 1 (localhost:81)
-Serviço 2 (localhost:82)
+NGINX Container
+(80 / 81 / 82 / 83)
+   ↓
+Serviço 1 (porta 81)
+Serviço 2 (porta 82)
 ```
+
+As portas internas do container são expostas no host da seguinte forma:
+
+| Host | Container |
+|-----|-----------|
+| 8080 | 80 |
+| 8081 | 81 |
+| 8082 | 82 |
+| 8083 | 83 |
 
 ---
 
@@ -27,16 +39,42 @@ Serviço 2 (localhost:82)
 
 ```
 .
-├── nginx.conf
-├── conf.d/
-│   ├── default.conf
-│   └── load-balancer.conf
+├── docker-compose.yml
+├── nginx_conf/
+│   ├── nginx.conf
+│   └── conf.d/
+│       ├── default.conf
+│       └── load-balancer.conf
+├── nginx_html/
+├── nginx_log/
+├── nginx_tmp/
 └── README.md
 ```
 
 ---
 
-## ⚙️ Arquivo nginx.conf
+## 🐳 docker-compose.yml
+
+```yaml
+services:
+  nginx:
+    image: nginx:1.29.4-alpine-slim
+    container_name: nginx
+    ports:
+      - "8080:80"
+      - "8081:81"
+      - "8082:82"
+      - "8083:83"
+    volumes:
+      - ./nginx_tmp:/tmp
+      - ./nginx_conf:/etc/nginx
+      - ./nginx_html/:/usr/share/nginx/html
+      - ./nginx_log/:/usr/share/nginx/logs
+```
+
+---
+
+## ⚙️ nginx.conf
 
 Arquivo principal do NGINX responsável por:
 
@@ -49,46 +87,61 @@ Arquivo principal do NGINX responsável por:
 
 ## 🔁 Proxy Reverso e Gateway (default.conf)
 
-O NGINX atua como **gateway**, roteando as requisições conforme o contexto da URL.
-
-| URL | Destino |
-|----|--------|
+| URL (Host) | Destino |
+|-----------|---------|
 | /servico1 | localhost:81 |
 | /servico2 | localhost:82 |
+
+Acesso externo:
+
+```
+http://localhost:8080/servico1
+http://localhost:8080/servico2
+```
 
 ---
 
 ## ⚖️ Load Balancer (load-balancer.conf)
 
-Distribui requisições entre múltiplos serviços usando **round-robin**.
-
-- Porta de acesso: **83**
+- Porta externa: **8083**
 - Serviços balanceados: **81 e 82**
-- Preserva IP do cliente via `X-Real-IP`
+- Estratégia: **round-robin**
+
+```
+http://localhost:8083
+```
 
 ---
 
-## ▶️ Como testar
+## ▶️ Como subir o ambiente
 
-Suba dois serviços simples:
+### Subir serviços de teste
 
-```bash
+```
 python3 -m http.server 81
 python3 -m http.server 82
 ```
 
-Inicie o NGINX:
+### Subir o NGINX
 
-```bash
-nginx -s reload
+```
+docker-compose up -d
 ```
 
-Testes:
+### Testes
 
-```bash
-curl http://localhost/servico1
-curl http://localhost/servico2
-curl http://localhost:83
+```
+curl http://localhost:8080/servico1
+curl http://localhost:8080/servico2
+curl http://localhost:8083
+```
+
+---
+
+## 🔄 Recarregar configurações
+
+```
+docker exec nginx nginx -s reload
 ```
 
 ---
@@ -98,13 +151,5 @@ curl http://localhost:83
 - Aplicações Java (Spring Boot, Tomcat, WildFly)
 - Microserviços
 - API Gateway
-- Balanceamento de carga
-- Segurança e performance
-
----
-
-## 👤 Autor
-
-Franklin  
-Estudos práticos com NGINX e arquitetura de software.
-
+- Load Balancer
+- Ambientes de desenvolvimento

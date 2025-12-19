@@ -1,0 +1,15 @@
+services:
+  nginx:
+    image: nginx:1.29.4-alpine-slim
+    container_name: nginx
+    ports:
+      - "8080:80"
+      - "8081:81"
+      - "8082:82"
+      - "8083:83"
+    volumes:
+      - ./nginx_tmp:/tmp
+      - ./nginx_conf:/etc/nginx
+      - ./nginx_html/:/usr/share/nginx/html
+      - ./nginx_log/:/usr/share/nginx/logs
+
