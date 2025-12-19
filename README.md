@@ -115,15 +115,6 @@ http://localhost:8083
 
 ## ▶️ Como subir o ambiente
 
-### Subir serviços de teste
-
-```
-python3 -m http.server 81
-python3 -m http.server 82
-```
-
-### Subir o NGINX
-
 ```
 docker-compose up -d
 ```
